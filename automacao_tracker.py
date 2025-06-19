@@ -9,7 +9,7 @@ service = Service(r"C:\Users\mares\Desktop\Projeto Python\chromedriver.exe")
 driver = webdriver.Chrome(service=service)
 
 driver.get('https://tracker.gg/valorant/premier/teams/b3cbd367-9f7d-44b2-83dd-a5617fe60da4/matches')
-time.sleep(2) 
+time.sleep(1) 
 
 # Acha a div das partidas
 match_table = driver.find_element(By.CSS_SELECTOR, 'div.v3-card__body.v3-card__body--v2\\.5')
@@ -17,7 +17,7 @@ rows = match_table.find_elements(By.CSS_SELECTOR, 'tr.match')
 
 print(f"Encontrou {len(rows)} partidas!")
 
-mapas, adversarios, datas, placar_self, placar_opp, resultado = [], [], [], [], [], []
+mapas, adversarios, placar_time, placar_inimigo, resultado = [], [], [], [], []
 
 for row in rows:
     try:
@@ -31,16 +31,13 @@ for row in rows:
         score_self = int(score_raw[0])
         score_opp = int(score_raw[1])
 
-        data = cols[5].text.strip()
-
         res = 'Vitória' if 'match--win' in row.get_attribute('class') else 'Derrota'
 
         # Adiciona nas lista
         mapas.append(mapa)
         adversarios.append(adversario)
-        datas.append(data)
-        placar_self.append(score_self)
-        placar_opp.append(score_opp)
+        placar_time.append(score_self)
+        placar_inimigo.append(score_opp)
         resultado.append(res)
 
     except Exception as e:
@@ -51,11 +48,10 @@ driver.quit()
 
 # data frame pandas
 df = pd.DataFrame({
-    'Data': datas,
     'Mapa': mapas,
     'Adversário': adversarios,
-    'Placar_Self': placar_self,
-    'Placar_Opp': placar_opp,
+    'Placar_Time': placar_time,
+    'Placar_Inimigo': placar_inimigo,
     'Resultado': resultado
 })
 
@@ -89,3 +85,4 @@ if not df.empty:
     print('\nDados CSV salvos')
 else:
     print('\nNenhuma partida encontrada.')
+
