@@ -11,6 +11,11 @@ driver = webdriver.Chrome(service=service)
 driver.get('https://tracker.gg/valorant/premier/teams/b3cbd367-9f7d-44b2-83dd-a5617fe60da4/matches')
 time.sleep(1) 
 
+# Segunda janela
+driver_overview = webdriver.Chrome(service=service)
+driver_overview.get('https://tracker.gg/valorant/premier/teams/b3cbd367-9f7d-44b2-83dd-a5617fe60da4/overview')
+time.sleep(1)
+
 # Acha a div das partidas
 match_table = driver.find_element(By.CSS_SELECTOR, 'div.v3-card__body.v3-card__body--v2\\.5')
 rows = match_table.find_elements(By.CSS_SELECTOR, 'tr.match')
@@ -18,6 +23,24 @@ rows = match_table.find_elements(By.CSS_SELECTOR, 'tr.match')
 print(f"Encontrou {len(rows)} partidas!")
 
 mapas, adversarios, placar_time, placar_inimigo, resultado = [], [], [], [], []
+
+nomes = []
+scores = []
+
+players = driver_overview.find_elements(By.CSS_SELECTOR, '.player.trn-card.trn-card--bordered')
+
+for p in players:
+    try:
+        nome = p.find_element(By.CSS_SELECTOR, '.player__profile').text.strip()
+        score = p.find_element(By.CSS_SELECTOR, '.text-20.font-bold').text.strip()
+        score = int(score.replace(',', '').replace('.', ''))
+
+        nomes.append(nome)
+        scores.append(score)
+
+    except Exception as e:
+        print("Erro ao coletar dados de um player:", e)
+        continue
 
 for row in rows:
     try:
@@ -45,6 +68,7 @@ for row in rows:
         continue
 
 driver.quit()
+driver_overview.quit()
 
 # data frame pandas
 df = pd.DataFrame({
@@ -85,4 +109,17 @@ if not df.empty:
     print('\nDados CSV salvos')
 else:
     print('\nNenhuma partida encontrada.')
+
+#Data frame mvp
+df_players = pd.DataFrame({
+    'Player': nomes,
+    'Tracker Score': scores
+}).sort_values(by='Tracker Score', ascending=False)
+
+print('\nTracker Score dos Players\n')
+print(df_players)
+
+# Acha o mvp
+mvp = df_players.iloc[0]
+print(f"\nO MVP é {mvp['Player']} com {mvp['Tracker Score']} de TRN Score!\n")
 
